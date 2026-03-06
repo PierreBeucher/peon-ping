@@ -4,12 +4,18 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
+    og-packs = {
+      url = "github:PeonPing/og-packs/main";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs = { self, nixpkgs, flake-utils, og-packs }:
     let
       # Home Manager module (system-agnostic)
-      homeManagerModules.default = import ./nix/hm-module.nix;
+      # Wrap to inject og-packs from flake input (Home Manager doesn't provide it automatically)
+      homeManagerModules.default = args@{ config, lib, pkgs, ... }:
+        import ./nix/hm-module.nix (args // { og-packs = og-packs; });
       
       # NixOS module
       nixosModules.default = import ./nix/nixos-module.nix;

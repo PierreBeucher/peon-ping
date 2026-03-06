@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, lib, pkgs, og-packs, ... }:
 
 with lib;
 
@@ -6,14 +6,9 @@ let
   cfg = config.programs.peon-ping;
   jsonFormat = pkgs.formats.json { };
 
-  ogPacksVersion = "1.4.0";
-
-  # Fetch the og-packs repository
-  ogPacksSrc = pkgs.fetchzip {
-    url = "https://github.com/PeonPing/og-packs/archive/refs/tags/v${ogPacksVersion}.tar.gz";
-    sha256 = "sha256-jkybxNrXfc8GFPAi0Lb1rF8fsx8Z8K0k5gQxh8Y62Ds=";
-    stripRoot = false;
-  };
+  # Use og-packs from flake input (provided by peon-ping flake)
+  # Override via peon-ping.inputs.og-packs.url in flake.nix if needed
+  ogPacksSrc = og-packs;
 in
 {
   options.programs.peon-ping = {
@@ -113,8 +108,8 @@ in
         set -euo pipefail
         mkdir -p $out
         ${lib.concatMapStringsSep "\n" (packName: ''
-          if [ -d "${ogPacksSrc}/og-packs-${ogPacksVersion}/${packName}" ]; then
-            cp -r "${ogPacksSrc}/og-packs-${ogPacksVersion}/${packName}" $out/
+          if [ -d "${ogPacksSrc}/${packName}" ]; then
+            cp -r "${ogPacksSrc}/${packName}" $out/
           else
             echo "Error: Pack '${packName}' not found in og-packs" >&2
             exit 1
